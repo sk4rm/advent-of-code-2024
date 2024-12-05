@@ -1,7 +1,10 @@
+// Possible changes:
+// - @embedFile
+
 const std = @import("std");
 
 pub fn main() !void {
-    const file_name = "input.txt";
+    const file_name = "input/day-1.txt";
     var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
     defer _ = gpa.deinit();
     const alloc = gpa.allocator();
