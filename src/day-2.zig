@@ -7,11 +7,10 @@ var problem_dampener_enabled = true;
 pub fn main() !void {
     // Parse input
 
-    // var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
-    // var arena = std.heap.ArenaAllocator.init(gpa.allocator());
-    // defer arena.deinit();
-    // const ally = arena.allocator();
-    const ally = std.heap.page_allocator;
+    var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
+    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer arena.deinit();
+    const ally = arena.allocator();
 
     var reports = std.ArrayList(std.ArrayList(i32)).init(ally);
     defer reports.deinit();
@@ -39,27 +38,35 @@ pub fn main() !void {
 fn checkReports(reports: std.ArrayList(std.ArrayList(i32))) !i32 {
     var total_safe: i32 = 0;
 
-    for (reports.items, 1..) |report, i| {
+    for (reports.items) |report| {
         const ok = try checkReport(report, problem_dampener_enabled);
-        if (ok) {
-            total_safe += 1;
-        } else std.debug.print("Line {}: {d}\n", .{ i, report.items });
+        if (ok) total_safe += 1;
     }
 
     return total_safe;
 }
 
 fn checkReport(report: std.ArrayList(i32), can_remove_level: bool) !bool {
+    var ok = true;
+
     const first_level = report.items[0];
     const second_level = report.items[1];
 
-    if (first_level == second_level) return false;
+    if (first_level == second_level) ok = false;
     const diff = @abs(first_level - second_level);
-    if (diff < 1 or diff > 3) return false;
+    if (diff < 1 or diff > 3) ok = false;
+
+    if (!ok) {
+        if (!can_remove_level) return false;
+        var tmp_1 = try report.clone();
+        var tmp_2 = try report.clone();
+        _ = tmp_1.orderedRemove(0);
+        _ = tmp_2.orderedRemove(1);
+        return try checkReport(tmp_1, false) or try checkReport(tmp_2, false);
+    }
 
     const is_asc = first_level < second_level;
     var previous = second_level;
-    var ok = true;
 
     for (report.items[2..]) |current| {
         if (previous == current) {
@@ -78,15 +85,10 @@ fn checkReport(report: std.ArrayList(i32), can_remove_level: bool) !bool {
             for (0..report.items.len) |i| {
                 var tmp = try report.clone();
                 _ = tmp.orderedRemove(i);
-                // ok = ok or try checkReport(tmp, false);
-                if (!ok) {
-                    if (try checkReport(tmp, false)) {
-                        // std.debug.print("-> {d}", .{tmp.items});
-                        ok = true;
-                    }
-                }
+                ok = ok or try checkReport(tmp, false);
+
+                if (ok) break;
             }
-            // if (ok) std.debug.print("{d}\n", .{report.items});
             return ok;
         }
 
