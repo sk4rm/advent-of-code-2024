@@ -2,10 +2,10 @@ const std = @import("std");
 const math = @import("std").math;
 
 const input: []const u8 = @embedFile("input/day-2.txt");
-var problem_dampener_enabled = true;
+var problem_dampener_enabled = false;
 
 pub fn main() !void {
-    // Memory allocation and management
+    // Parse input
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
     var arena = std.heap.ArenaAllocator.init(gpa.allocator());
@@ -27,7 +27,7 @@ pub fn main() !void {
         try reports.append(report);
     }
 
-    // Actual solving
+    // Solution driver
 
     const total_safe: i32 = solve(reports);
 
@@ -37,36 +37,45 @@ pub fn main() !void {
 
 fn solve(reports: std.ArrayList(std.ArrayList(i32))) i32 {
     var total_safe: i32 = 0;
-    var i: i32 = 1;
 
-    for (reports.items) |levels| {
-        defer i += 1;
-        const first = levels.items[0];
-        const second = levels.items[1];
-
-        if (first == second) continue;
-        const diff = @abs(first - second);
-        if (diff < 1 or diff > 3) continue;
-
-        const is_asc = first < second;
-        var previous = second;
-        var ok = true;
-
-        for (levels.items[2..]) |current| {
-            if (previous == current) {
-                ok = false;
-            } else if (is_asc) {
-                ok = (current - previous >= 1) and (current - previous <= 3);
-            } else {
-                ok = (previous - current >= 1) and (previous - current <= 3);
-            }
-
-            if (!ok) break;
-            previous = current;
-        }
-
+    for (reports.items) |report| {
+        const ok = checkReport(report, problem_dampener_enabled);
         if (ok) total_safe += 1;
     }
 
     return total_safe;
+}
+
+fn checkReport(report: std.ArrayList(i32), can_remove_level: bool) bool {
+    const first_level = report.items[0];
+    const second_level = report.items[1];
+
+    if (first_level == second_level) return false;
+    const diff = @abs(first_level - second_level);
+    if (diff < 1 or diff > 3) return false;
+
+    const is_asc = first_level < second_level;
+    var previous = second_level;
+    var ok = true;
+
+    for (report.items[2..]) |current| {
+        if (previous == current) {
+            ok = false;
+        } else if (is_asc) {
+            ok = (current - previous >= 1) and (current - previous <= 3);
+        } else {
+            ok = (previous - current >= 1) and (previous - current <= 3);
+        }
+
+        if (!ok) {
+            if (!can_remove_level) return false;
+
+            // Part 2: test all combinations of removing 1 level from report
+        }
+
+        previous = current;
+    }
+
+    // return false?
+    return ok;
 }
