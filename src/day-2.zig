@@ -2,15 +2,16 @@ const std = @import("std");
 const math = @import("std").math;
 
 const input: []const u8 = @embedFile("input/day-2.txt");
-var problem_dampener_enabled = false;
+var problem_dampener_enabled = true;
 
 pub fn main() !void {
     // Parse input
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
-    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
-    defer arena.deinit();
-    const ally = arena.allocator();
+    // var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
+    // var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    // defer arena.deinit();
+    // const ally = arena.allocator();
+    const ally = std.heap.page_allocator;
 
     var reports = std.ArrayList(std.ArrayList(i32)).init(ally);
     defer reports.deinit();
@@ -29,24 +30,26 @@ pub fn main() !void {
 
     // Solution driver
 
-    const total_safe: i32 = solve(reports);
+    const total_safe: i32 = try checkReports(reports);
 
     const std_out = std.io.getStdOut().writer();
     try std_out.print("{}", .{total_safe});
 }
 
-fn solve(reports: std.ArrayList(std.ArrayList(i32))) i32 {
+fn checkReports(reports: std.ArrayList(std.ArrayList(i32))) !i32 {
     var total_safe: i32 = 0;
 
-    for (reports.items) |report| {
-        const ok = checkReport(report, problem_dampener_enabled);
-        if (ok) total_safe += 1;
+    for (reports.items, 1..) |report, i| {
+        const ok = try checkReport(report, problem_dampener_enabled);
+        if (ok) {
+            total_safe += 1;
+        } else std.debug.print("Line {}: {d}\n", .{ i, report.items });
     }
 
     return total_safe;
 }
 
-fn checkReport(report: std.ArrayList(i32), can_remove_level: bool) bool {
+fn checkReport(report: std.ArrayList(i32), can_remove_level: bool) !bool {
     const first_level = report.items[0];
     const second_level = report.items[1];
 
@@ -67,15 +70,28 @@ fn checkReport(report: std.ArrayList(i32), can_remove_level: bool) bool {
             ok = (previous - current >= 1) and (previous - current <= 3);
         }
 
+        // Second chance basically
         if (!ok) {
             if (!can_remove_level) return false;
 
             // Part 2: test all combinations of removing 1 level from report
+            for (0..report.items.len) |i| {
+                var tmp = try report.clone();
+                _ = tmp.orderedRemove(i);
+                // ok = ok or try checkReport(tmp, false);
+                if (!ok) {
+                    if (try checkReport(tmp, false)) {
+                        // std.debug.print("-> {d}", .{tmp.items});
+                        ok = true;
+                    }
+                }
+            }
+            // if (ok) std.debug.print("{d}\n", .{report.items});
+            return ok;
         }
 
         previous = current;
     }
 
-    // return false?
-    return ok;
+    return ok; // always true?
 }
