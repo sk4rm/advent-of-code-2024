@@ -3,21 +3,40 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 )
 
-//go:embed input/day-3.txt
+//go:embed prepared.txt
 var input string
 
 func main() {
+	instructions := strings.Split(input, "\n")
+	ans := solve(instructions)
+	fmt.Println(ans)
+}
 
-	re := regexp.MustCompile(`mul\(\d+,\d+\)`)
+func solve(instructions []string) int {
+	shouldMul := true
+	sum := 0
 
-	matches := re.FindAllString(input, -1)
+	for _, inst := range instructions {
+		switch inst {
 
-	fmt.Println(solve(matches))
+		case "do()":
+			shouldMul = true
+
+		case "don't()":
+			shouldMul = false
+
+		default:
+			if shouldMul {
+				sum += mustMultiply(inst)
+			}
+		}
+	}
+
+	return sum
 }
 
 func mustMultiply(instruction string) int {
@@ -34,12 +53,4 @@ func mustMultiply(instruction string) int {
 	}
 
 	return op1 * op2
-}
-
-func solve(instructions []string) int {
-	sum := 0
-	for _, inst := range instructions {
-		sum += mustMultiply(inst)
-	}
-	return sum
 }
