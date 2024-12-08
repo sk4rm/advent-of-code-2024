@@ -1,0 +1,114 @@
+Given input:
+
+    MMMSXXMASM
+    MSAMXMSMSA
+    AMXSXMAAMM
+    MSAMASMSMX
+    XMASAMXAMM
+    XXAMMXXAMA
+    SMSMSASXSS
+    SAXAMASAAA
+    MAMMMXMMMM
+    MXMXAXMASX
+
+
+1. Locate all X as "seeds". Establish valid directions to "explore".
+
+    Iteration 1
+
+    ....XX....
+    ....X.....
+    ..........
+    .........X
+    X.....X...
+    X.....X...
+    ..........
+    ..........
+    ..........
+    .X.X.X...X
+
+    coords := (i, j)
+    direction := N/S/E/W/NE/NW/SE/SW    
+    seed := { coords, direction }
+    
+    set of seeds = {
+        { (0,4) ,  N },
+        { (0,4) , NE },
+        { (0,4) ,  E },
+        { (0,4) , SE },
+        { (0,4) ,  S },
+        { (0,4) , SW },
+        { (0,4) ,  W },
+        { (0,4) , NW },
+        { (0,5) ,  N },
+        ... 
+    }
+
+    Iteration 2
+
+    ....XX....
+    ....X.....
+    ..........
+    .........X
+    X.....X...
+    X.....X...
+    ..........
+    ..........
+    ..........
+    .X.X.X...X
+
+    seeds stay "alive" if is within bounds:
+        1. 0 <= i <= H
+        2. 0 <= j <= W
+
+    updated set of seeds = {
+        { (0,4) ,  W },
+        { (0,4) , SW },
+        { (0,4) , SE },
+        { (0,5) ,  E },
+        { (0,5) , SE },
+        { (0,5) ,  S },
+        ... 
+    }
+
+
+2. Explore each directions of each X, keeping track of the initial direction.
+
+    Iteration 3
+
+    ....XXM...
+    ...MXM....
+    ..........
+    ......M..X
+    XM...MX.MM
+    X.....X...
+    ..........
+    ..........
+    ..M.M.M.MM
+    .X.X.XM..X
+
+    seeds stay "alive" if:
+        1. is M
+        2. is within bounds
+    
+    "dead" seeds get removed from the set.
+    
+    update seed position to be M position but keep direction.
+    
+    updated set of seeds = {
+        { (0,4) ,  W }   ->   { (0,5) ,  W }   ->   (0,5) is not M   ->   "dies"       ->   remove
+        { (0,4) , SW }   ->   { (1,3) , SW }   ->     (1,3) is M     -> stays "alive"  ->    keep
+        ...
+    }
+
+    since (coordinate + direction) uniquely identify (a way to match XMAS),
+    we don't have to worry about losing track of overlapping letters
+
+
+Repeat iterations for A and S.
+
+
+The number of alive seeds = The ways to match XMAS.
+
+
+Note: We could have treated each letter as a seed for the first iteration, but that eats memory.
