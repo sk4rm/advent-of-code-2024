@@ -12,7 +12,7 @@ Given input:
     MXMXAXMASX
 
 
-1. Locate all X as "seeds". Establish valid directions to "explore".
+1. Locate all X as "seeds". Establish valid directions to "explore"
 
     Iteration 1
 

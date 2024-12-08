@@ -1,0 +1,41 @@
+Given input:
+
+    MMMSXXMASM
+    MSAMXMSMSA
+    AMXSXMAAMM
+    MSAMASMSMX
+    XMASAMXAMM
+    XXAMMXXAMA
+    SMSMSASXSS
+    SAXAMASAAA
+    MAMMMXMMMM
+    MXMXAXMASX
+
+
+A stencil/mask would probably work better instead of exploring
+
+The only possible cases are:
+
+    M.M    M.S    S.S    S.M
+    .A.    .A.    .A.    .A.
+    S.S    M.S    M.M    S.M
+
+The seeds will be A, instead of X
+
+We also don't need to check A's in the outer "layer" of the input.
+
+    ..........
+    .SAMXMSMS.
+    .MXSXMAAM.
+    .SAMASMSM.
+    .MASAMXAM.
+    .XAMMXXAM.
+    .MSMSASXS.
+    .AXAMASAA.
+    .AMMMXMMM.
+    ..........
+
+
+1. Locate all the A's
+
+2. Check if the corners of A match any of the 4 cases.
